@@ -24,23 +24,26 @@ public class FCMPluginActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 		Log.d(TAG, "==> FCMPluginActivity onCreate");
-		
-		Map<String, Object> data = new HashMap<String, Object>();
-        if (getIntent().getExtras() != null) {
-			Log.d(TAG, "==> USER TAPPED NOTFICATION");
-			data.put("wasTapped", true);
-			for (String key : getIntent().getExtras().keySet()) {
-                Object value = getIntent().getExtras().get(key);
-                Log.d(TAG, "\tKey: " + key + " Value: " + value);
-				data.put(key, value);
-            }
-        }
-		
-		FCMPlugin.sendPushPayload(data);
-
+		this.sendPushPayload();
         finish();
 
         forceMainActivityReload();
+    }
+    private void sendPushPayload() {
+        Bundle intentExtras = getIntent().getExtras();
+        if(intentExtras == null) {
+            return;
+        }
+        Log.d(TAG, "==> USER TAPPED NOTIFICATION");
+        Map<String, Object> data = new HashMap<String, Object>();
+        data.put("wasTapped", true);
+        for (String key : intentExtras.keySet()) {
+            Object value = intentExtras.get(key);
+            Log.d(TAG, "\tKey: " + key + " Value: " + value);
+            data.put(key, value);
+        }
+        FCMPlugin.setInitialPushPayload(data);
+        FCMPlugin.sendPushPayload(data);
     }
 
     private void forceMainActivityReload() {

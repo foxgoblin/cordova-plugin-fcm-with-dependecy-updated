@@ -29,6 +29,7 @@ public class FCMPlugin extends CordovaPlugin {
     public static String tokenRefreshCallBack = "FCMPlugin.onTokenRefreshReceived";
     public static Boolean notificationCallBackReady = false;
     public static Map<String, Object> lastPush = null;
+    public static Map<String, Object> initialPushPayload;
 
     protected Context context = null;
     protected static OnFinishedListener<JSONObject> notificationFn = null;
@@ -103,6 +104,14 @@ public class FCMPlugin extends CordovaPlugin {
                     }
                 });
             }
+            // GET INITIAL PUSH PAYLOAD
+            else if (action.equals("getInitialPushPayload")) {
+                cordova.getActivity().runOnUiThread(new Runnable() {
+                    public void run() {
+                        getInitialPushPayload(callbackContext);
+                    }
+                });
+            }
             // UN/SUBSCRIBE TOPICS //
             else if (action.equals("subscribeToTopic")) {
                 cordova.getThreadPool().execute(new Runnable() {
@@ -174,6 +183,30 @@ public class FCMPlugin extends CordovaPlugin {
         this.registerNotification(callback);
     }
 
+    public void getInitialPushPayload(CallbackContext callback) {
+        if(initialPushPayload == null) {
+            Log.d(TAG, "getInitialPushPayload: null");
+            callback.success((String) null);
+            return;
+        }
+        Log.d(TAG, "getInitialPushPayload");
+        try {
+            JSONObject jo = new JSONObject();
+            for (String key : initialPushPayload.keySet()) {
+                jo.put(key, initialPushPayload.get(key));
+                Log.d(TAG, "\tinitialPushPayload: " + key + " => " + initialPushPayload.get(key));
+            }
+            callback.success(jo);
+        } catch(Exception error) {
+            try {
+                callback.error(exceptionToJson(error));
+            }
+            catch (JSONException jsonErr) {
+                Log.e(TAG, "Error when parsing json", jsonErr);
+            }
+        }
+    }
+
     public void getToken(final TokenListeners<String, JSONObject> callback) {
         try {
             FirebaseInstanceId.getInstance().getInstanceId().addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
@@ -241,6 +274,12 @@ public class FCMPlugin extends CordovaPlugin {
         });
     }
 
+    public static void setInitialPushPayload(Map<String, Object> payload) {
+        if(initialPushPayload == null) {
+            initialPushPayload = payload;
+        }
+    }
+
     public static void sendPushPayload(Map<String, Object> payload) {
         Log.d(TAG, "==> FCMPlugin sendPushPayload");
         Log.d(TAG, "\tnotificationCallBackReady: " + notificationCallBackReady);
@@ -284,6 +323,7 @@ public class FCMPlugin extends CordovaPlugin {
     public void onDestroy() {
         gWebView = null;
         notificationCallBackReady = false;
+        initialPushPayload = null;
     }
 
     protected Context getContext() {

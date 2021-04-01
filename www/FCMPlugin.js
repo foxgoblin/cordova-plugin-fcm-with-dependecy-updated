@@ -49,6 +49,11 @@ FCMPlugin.prototype.getAPNSToken = function (success, error) {
   exec(success, error, "FCMPlugin", "getAPNSToken", []);
 };
 
+// GET INITIAL PUSH PAYLOAD //
+FCMPlugin.prototype.getInitialPushPayload = function () {
+  return execAsPromise('getInitialPushPayload');
+};
+
 // CLEAR ALL NOTIFICATIONS //
 FCMPlugin.prototype.clearAllNotifications = function (success, error) {
   exec(success, error, "FCMPlugin", "clearAllNotifications", []);
